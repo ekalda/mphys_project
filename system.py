@@ -4,9 +4,9 @@ from numpy import matlib
 import math as mt
 from constants import Constants
 import constants
+import unittest
 
 c = Constants()
-#hbar = c.hbar
 hbar = constants.hbar
 A = constants.angstrom
 eV = constants.eV
@@ -62,40 +62,26 @@ class System(object):
         print('applying voltage...')
         self.app_volt = applied_voltage
         l = self.find_sys_length()
-        #print('sys length in function', l)
-        divs = l/inc
-        #print('divs', divs)
-        height_inc = applied_voltage/divs
-        #print('height inc', height_inc)
-        #variable that keeps track of the height_incs
-        inc_num = divs
-        #print('h_inc', h_inc)
-        # splitting the arrays into increments of width inc
-        for obj in self.sys: #looping over sys objects
-            # fraction this object's lenght is of the total system length
-            obj_frac = sum(obj.width_array)/l
-            # potential drop in the object
-            obj_pot_drop = applied_voltage * obj_frac
-            inc = self.determine_inc(inc, obj.width_array)
-            #print(obj)
-            w_array_new = []
+        # find the array of potential drops
+        v_arr = self.find_pot_drops(l)
+        for n in range(len(self.sys)): #looping over sys objects
+            obj = self.sys[n]
+            bounds = v_arr[n]
+            #adjust the increments. Calling this function should change the h and w arrays of the object
+            self.determine_inc(inc, obj)
+            # number of divisions in the object
+            obj_divs = len(obj.width_array)
+            #potential drop per division
+            pot_inc = (bounds[0]-bounds[1])/obj_divs
+            # new height array
             h_array_new = []
-            for i in range(len(obj.width_array)): #looping over width array elements
-                #print(i)
-                #number of incs in the array element
-                inc_num = obj.width_array[i]/inc
-                #print('inc_num', inc_num)
-                #print(inc, inc_num, int(inc_num))
-                for j in range(int(inc_num)): #looping over new incs
-                    #print(j)
-                    w_array_new.append(inc)
-                    h_array_new.append(obj.height_array[i]+inc_num*height_inc)
-                    inc_num -= 1
-                    #print(h_inc)
-                    #print(w_array_new, h_array_new)
-            obj.width_array = np.array(w_array_new)
-            obj.height_array = np.array(h_array_new)
-            #print(obj.height_array)
+            #potential added to the first division
+            add_pot = bounds[0] - pot_inc
+            # looping over width array elements
+            for i in range(obj_divs):
+                h_array_new.append(obj.height_array[i] + add_pot)
+                add_pot -= pot_inc
+            obj.height_array = h_array_new
 
     def determine_inc(self, inc_given, obj):
         print('modifying the increment...')
@@ -108,23 +94,41 @@ class System(object):
         # finding the largest inc that is smaller than the smallest increment
         for i in old_w_array:
             while i < inc:
+                print('WHILE')
                 inc /= 2.
         # counting the old array divisions
         n = 0
         # looping over the widths in width array
         for w in old_w_array:
             # how many incs fit into the division?
-            total_inc = int(w//inc)
+            total_incs = int(w//inc)
             # how much to add to every increment (remainder per inc)
-            r_per_inc = (w - inc * total_inc)/total_inc
-            for i in range(total_inc):
+            r_per_inc = (w - inc * total_incs)/total_incs
+            for i in range(total_incs):
                 new_w_arr.append(inc + r_per_inc)
                 new_h_arr.append(old_h_array[n])
             n += 1
-        assert sum(new_w_arr)==sum(old_w_array), 'lengths are not the same'
-        assert len(new_h_arr)== sum(new_w_arr), 'width and height arrays do not have the same lengths'
+        print(sum(new_w_arr), sum(old_w_array))
+        assert abs(sum(new_w_arr)-sum(old_w_array)) < 0.000001, 'lengths are not the same'
+        #assert len(new_h_arr) == sum(new_w_arr), 'width and height arrays do not have the same lengths' DOESNT WORK
         obj.width_array = new_w_arr
         obj.height_array = new_h_arr
+
+    #function that returns the potential drops
+    def find_pot_drops(self, sys_length):
+        v = self.app_volt
+        l = sys_length
+        #array for voltages
+        v_arr = []
+        for obj in self.sys:
+            frac = obj.total_width/l
+            #potential drop per object
+            pot_drop = self.app_volt*frac
+            #append bounadaries for the object to the v_arr
+            v_arr.append([v, v-pot_drop])
+            v -= pot_drop
+        assert len(v_arr)==len(self.sys), 'voltage drop array does not have a length which is same as the elements in a system'
+        return v_arr
 
 # class representing system object (either well or barrier)
 class SysObject(object):
