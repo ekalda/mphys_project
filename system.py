@@ -59,6 +59,7 @@ class System(object):
         return 1 / ((abs(sys_mat[0, 0])) ** 2)
 
     def apply_linear_voltage(self, applied_voltage, inc):
+        print('applying voltage...')
         self.app_volt = applied_voltage
         l = self.find_sys_length()
         #print('sys length in function', l)
@@ -75,7 +76,7 @@ class System(object):
             obj_frac = sum(obj.width_array)/l
             # potential drop in the object
             obj_pot_drop = applied_voltage * obj_frac
-
+            inc = self.determine_inc(inc, obj.width_array)
             #print(obj)
             w_array_new = []
             h_array_new = []
@@ -96,16 +97,34 @@ class System(object):
             obj.height_array = np.array(h_array_new)
             #print(obj.height_array)
 
-    def determine_inc(self, inc_given, obj_width_array):
+    def determine_inc(self, inc_given, obj):
+        print('modifying the increment...')
         inc = inc_given
-        l_obj = sum(obj_width_array)
-        #check if inc is smaller than the smallest barrier widht
-        for i in obj_width_array:
+        old_w_array = obj.width_array
+        old_h_array = obj.height_array
+        # new width and height arrays
+        new_w_arr = []
+        new_h_arr = []
+        # finding the largest inc that is smaller than the smallest increment
+        for i in old_w_array:
             while i < inc:
                 inc /= 2.
-        # how many incs fit into the object?
-        total_inc = int(l_obj//inc_given)
-        remainder = l_obj - inc*total_inc
+        # counting the old array divisions
+        n = 0
+        # looping over the widths in width array
+        for w in old_w_array:
+            # how many incs fit into the division?
+            total_inc = int(w//inc)
+            # how much to add to every increment (remainder per inc)
+            r_per_inc = (w - inc * total_inc)/total_inc
+            for i in range(total_inc):
+                new_w_arr.append(inc + r_per_inc)
+                new_h_arr.append(old_h_array[n])
+            n += 1
+        assert sum(new_w_arr)==sum(old_w_array), 'lengths are not the same'
+        assert len(new_h_arr)== sum(new_w_arr), 'width and height arrays do not have the same lengths'
+        obj.width_array = new_w_arr
+        obj.height_array = new_h_arr
 
 # class representing system object (either well or barrier)
 class SysObject(object):
