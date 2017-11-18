@@ -5,12 +5,17 @@ from types import *
 
 eV = constants.eV
 
-def create_energy_array(system, e_interval, inc):
+def create_energy_array(system, e_interval, inc, surface_roughness=False, dev=None, smooth_corners=False):
     assert isinstance(e_interval, list), 'e_interval is not a list: %r' % e_interval
-    sys_copy = cp.deepcopy(system)
-    e_array = np.arange(e_interval[0], e_interval[1], inc)
+    e_array = np.arange(e_interval[0], e_interval[1], inc) #in eV
     t_array = []
     for e in e_array:
+        sys_copy = cp.deepcopy(system)
+        if surface_roughness:
+            assert dev is not None, 'no max dev specified'
+            sys_copy.adjust_widths(dev)
+        if smooth_corners:
+            sys_copy.smooth_corners()
         trans_coeff = sys_copy.find_transmission_coefficient(e*eV)
         t_array.append(trans_coeff)
     return e_array, t_array

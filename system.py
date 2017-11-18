@@ -147,9 +147,14 @@ class System(object):
     def smooth_corners(self, objects=None):
         # check if there is a list of object for which to do the smoothing and if not, do it for all the objects
         if objects is None:
-            objects = self.sys
-        for obj in objects:
-            if obj.obj_type == 'barrier' or obj.obj_type == 'well':
-                obj.smooth_obj_corners()
+            i = 0
+            objects = []
+            for i in range(len(self.sys)):
+                objects.append(i)
+                i += 1
+        assert isinstance(objects, list), 'argument needs to be a list of object indices'
+        for n in objects:
+            if self.sys[n].obj_type == 'barrier' or self.sys[n].obj_type == 'well':
+                self.sys[n].smooth_obj_corners()
 
 

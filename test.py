@@ -27,9 +27,9 @@ widths_c = np.array([1.])*A
 heights_c = np.array([0.])*eV
 
 my_system.add_system_object(SysObjSpecified('source', widths_e, heights_e, 0.067*me))
-my_system.add_system_object(RectObject('barrier', 10.1 * A, 0.5 * eV, 0.067 * me))
-my_system.add_system_object(RectObject('well', 20. * A, 0.0, 0.067 * me))
-my_system.add_system_object(RectObject('barrier', 10. * A, 0.5 * eV, 0.067 * me))
+my_system.add_system_object(RectObject('barrier', 20. * A, 0.5 * eV, 0.067 * me))
+my_system.add_system_object(RectObject('well', 50. * A, 0.0, 0.067 * me))
+my_system.add_system_object(RectObject('barrier', 20. * A, 0.5 * eV, 0.067 * me))
 my_system.add_system_object(SysObjSpecified('drain', widths_c, heights_c, 0.067*me))
 
 #my_system.find_transmission_coefficient(0.05)
@@ -39,7 +39,7 @@ print('sys length', my_system.find_sys_length())
 print(my_system.sys[3].height_array)
 #my_system.apply_linear_voltage(0.3*eV, 1.*A)
 #my_system.adjust_widths(1.*A)
-my_system.smooth_corners()
+#my_system.smooth_corners(objects=[1, 2])
 print(my_system.sys[3].height_array)
 
 #print(my_system.sys[1].height_array)
@@ -52,11 +52,11 @@ print(my_system.sys[3].height_array)
 
 print(my_system.find_transmission_coefficient(0.0))
 #print(my_system.sys[1].width_array)
-#my_sim = sim.create_voltage_array(my_system, [0.03, 0.3], 0.01, 1.*A)
+arrays = sim.create_energy_array(my_system, [0.0, 0.6], 0.001, smooth_corners=True, surface_roughness=True, dev=1*A)
 
-#plt.plot(my_sim[0], my_sim[1])
+plt.plot(arrays[0], arrays[1])
 #plt.yscale('log')
-#plt.show()
+plt.show()
 
 '''v_array = np.arange(0.01, 0.35, 0.001)
 print(v_array)
