@@ -144,3 +144,12 @@ class System(object):
         adj_sys_l = self.find_sys_length()
         assert abs(init_sys_l-adj_sys_l) < 0.000001, 'adjusting object widths changed the system length'
 
+    def smooth_corners(self, objects=None):
+        # check if there is a list of object for which to do the smoothing and if not, do it for all the objects
+        if objects is None:
+            objects = self.sys
+        for obj in objects:
+            if obj.obj_type == 'barrier' or obj.obj_type == 'well':
+                obj.smooth_obj_corners()
+
+

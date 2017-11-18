@@ -27,19 +27,20 @@ widths_c = np.array([1.])*A
 heights_c = np.array([0.])*eV
 
 my_system.add_system_object(SysObjSpecified('source', widths_e, heights_e, 0.067*me))
-my_system.add_system_object(SquareBarrier('barrier', 10.1*A, 0.5*eV, 0.067*me))
-my_system.add_system_object(SquareBarrier('well', 20.*A, 0.0, 0.067*me))
-my_system.add_system_object(SquareBarrier('barrier', 10.*A, 0.5*eV, 0.067*me))
+my_system.add_system_object(RectObject('barrier', 10.1 * A, 0.5 * eV, 0.067 * me))
+my_system.add_system_object(RectObject('well', 20. * A, 0.0, 0.067 * me))
+my_system.add_system_object(RectObject('barrier', 10. * A, 0.5 * eV, 0.067 * me))
 my_system.add_system_object(SysObjSpecified('drain', widths_c, heights_c, 0.067*me))
 
 #my_system.find_transmission_coefficient(0.05)
 #print(my_system.sys[1].width_array)
 #print(my_system.sys[1].height_array)
 print('sys length', my_system.find_sys_length())
-print(my_system.sys[1].width_array)
+print(my_system.sys[3].height_array)
 #my_system.apply_linear_voltage(0.3*eV, 1.*A)
-my_system.adjust_widths(1.*A)
-print(my_system.sys[1].width_array)
+#my_system.adjust_widths(1.*A)
+my_system.smooth_corners()
+print(my_system.sys[3].height_array)
 
 #print(my_system.sys[1].height_array)
 #print(my_system.app_volt)

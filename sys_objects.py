@@ -3,6 +3,8 @@ import constants
 from mat import *
 
 hbar = constants.hbar
+eV = constants.eV
+A = constants.angstrom
 
 # class representing system object (either well or barrier)
 class SysObject(object):
@@ -40,6 +42,32 @@ class SysObject(object):
             sys_mat_local = np.dot(sys_mat_local, prop_mat_local)
         return sys_mat_local
 
+    def smooth_obj_corners(self, mod_width=2*A, mod_height=0.05*eV, incs=5):
+        assert 2 * mod_width < self.total_width, 'object is too narrow for smoothing the corners'
+        obj_height = self.height_array[0]
+        new_w_arr = []
+        new_h_arr = []
+        new_w_arr.append(self.total_width - 2 * mod_width)
+        new_h_arr.append(obj_height)
+        pot_inc = mod_height/incs
+        width_inc = mod_width/incs
+        n = 1 #variable to count the pot incs
+        for i in range(incs):
+            new_w_arr.insert(0, width_inc)
+            new_w_arr.append(width_inc)
+            if self.obj_type == 'well':
+                new_h_arr.insert(0, n * pot_inc)
+                new_h_arr.append(n * pot_inc)
+            elif self.obj_type == 'barrier':
+                new_h_arr.insert(0, obj_height - n* pot_inc)
+                new_h_arr.append(obj_height - n * pot_inc)
+            else:
+                print('BAD OBJECT TYPE')
+            n += 1
+        #updating the height and width arrays
+        assert len(new_h_arr) == len(new_w_arr), 'width and height arrays are not of a same length'
+        self.width_array = new_w_arr
+        self.height_array = new_h_arr
 
 class SysObjSpecified(SysObject):
     def __init__(self, obj_type, width_array, height_array, m_effective):
@@ -52,13 +80,13 @@ class SysObjSpecified(SysObject):
         # self.height_array = height_array
 
 
-class SquareBarrier(SysObject):
+class RectObject(SysObject):
     def __init__(self, obj_type, width, height, m_effective):
         # dividing barrier into bits for functions to work
         self.width_array = [width]
         self.height_array = [height]
-        super(SquareBarrier, self).__init__(obj_type, width, self.width_array,
-                                            self.height_array, m_effective)
+        super(RectObject, self).__init__(obj_type, width, self.width_array,
+                                         self.height_array, m_effective)
 
 
 class RoundBarrier(SysObject):
