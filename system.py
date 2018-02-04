@@ -6,6 +6,7 @@ from constants import Constants
 from sys_objects import *
 import constants
 import random
+import prof
 
 c = Constants()
 hbar = constants.hbar
@@ -32,7 +33,7 @@ class System(object):
         return l
 
     def find_transmission_coefficient(self, E):
-        print('finding transmission coefficient...')
+        #print('finding transmission coefficient...')
         E += self.app_volt + 0.00000001*eV #to avoid division by 0
         #print('energy', E)
         # initialising system matrix
@@ -61,7 +62,7 @@ class System(object):
         return 1 / ((abs(sys_mat[0, 0])) ** 2)
 
     def apply_linear_voltage(self, applied_voltage, inc):
-        print('applying voltage...')
+        #print('applying voltage...')
         self.app_volt = applied_voltage
         l = self.find_sys_length()
         # find the array of potential drops
@@ -86,7 +87,7 @@ class System(object):
             obj.height_array = h_array_new
 
     def determine_inc(self, inc_given, obj):
-        print('modifying the increment...')
+        #print('modifying the increment...')
         inc = inc_given
         old_w_array = obj.width_array
         old_h_array = obj.height_array
@@ -110,7 +111,7 @@ class System(object):
                 new_w_arr.append(inc + r_per_inc)
                 new_h_arr.append(old_h_array[n])
             n += 1
-        print(sum(new_w_arr), sum(old_w_array))
+        #print(sum(new_w_arr), sum(old_w_array))
         assert abs(sum(new_w_arr)-sum(old_w_array)) < 0.000001, 'lengths are not the same'
         #assert len(new_h_arr) == sum(new_w_arr), 'width and height arrays do not have the same lengths' DOESNT WORK
         obj.width_array = new_w_arr
@@ -132,6 +133,7 @@ class System(object):
         assert len(v_arr)==len(self.sys), 'voltage drop array does not have a length which is same as the elements in a system'
         return v_arr
 
+    #@prof.do_cprofile
     def adjust_widths(self, max_deviation):
         assert max_deviation >= 0., 'max_deviation has to be positive real number'
         init_sys_l = self.find_sys_length()
@@ -154,7 +156,7 @@ class System(object):
                 i += 1
         assert isinstance(objects, list), 'argument needs to be a list of object indices'
         for n in objects:
-            if self.sys[n].obj_type == 'barrier' or self.sys[n].obj_type == 'well':
+            if self.sys[n].type == 'barrier' or self.sys[n].type == 'well':
                 self.sys[n].smooth_obj_corners()
 
 

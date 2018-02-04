@@ -8,12 +8,12 @@ A = constants.angstrom
 
 # class representing system object (either well or barrier)
 class SysObject(object):
-    def __init__(self, obj_type, width, width_array, height_array, m_effective):
-        self.obj_type = obj_type
-        self.total_width = width
+    def __init__(self, type=None, width_array=None, height_array=None, m_effective=None):
+        self.total_width = sum(width_array)
         self.width_array = width_array
         self.height_array = height_array
         self.mass = m_effective
+        self.type = type
 
     def find_wave_vector(self, E, V):
         assert E != V, 'E and V must not equal to each other'
@@ -55,10 +55,10 @@ class SysObject(object):
         for i in range(incs):
             new_w_arr.insert(0, width_inc)
             new_w_arr.append(width_inc)
-            if self.obj_type == 'well':
+            if self.type == 'well':
                 new_h_arr.insert(0, n * pot_inc)
                 new_h_arr.append(n * pot_inc)
-            elif self.obj_type == 'barrier':
+            elif self.type == 'barrier':
                 new_h_arr.insert(0, obj_height - n* pot_inc)
                 new_h_arr.append(obj_height - n * pot_inc)
             else:
@@ -81,14 +81,14 @@ class SysObjSpecified(SysObject):
 
 
 class RectObject(SysObject):
-    def __init__(self, obj_type, width, height, m_effective):
+    def __init__(self, width=None, height=None, m_effective=None):
         # dividing barrier into bits for functions to work
-        self.width_array = [width]
-        self.height_array = [height]
-        super(RectObject, self).__init__(obj_type, width, self.width_array,
+        self.width_array = width
+        self.height_array = height
+        super(RectObject, self).__init__(width, self.width_array,
                                          self.height_array, m_effective)
 
-
+'''
 class RoundBarrier(SysObject):
     def __init__(self, obj_type, width, min_height, max_height, divisions,
                  m_effective):
@@ -125,3 +125,4 @@ class RoundBarrier(SysObject):
                 h_arr.insert(0, h_min + i * inc)
                 h_arr.append(h_min + i * inc)
         return h_arr
+        '''

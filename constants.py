@@ -5,6 +5,7 @@ hbar = 1.0546 * 10 ** (-34)  # in J
 # hbar = 6.582 * 10**(-16) # eV*s
 q = 1.602 * 10 ** (-19)  # electron charge
 me = 9.109 * 10 ** (-31)
+k = 1.380 * 10 **(-23) # J/K
 
 class Constants(object):
     def __init__(self):
