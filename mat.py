@@ -1,6 +1,7 @@
 import numpy as np
 import cmath
 
+
 class PropagationMatrix(object):
     def __init__(self, k_i, d):
         self.k_i = k_i

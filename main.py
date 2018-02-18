@@ -4,10 +4,12 @@ from collections import OrderedDict
 import ast
 from system import *
 from sim import *
+import os.path
 
 eV = constants.eV
 A = constants.angstrom
 me = constants.me
+
 
 def main():
     print('reading the input data...')
@@ -47,7 +49,11 @@ def main():
         system.app_volt = voltage * eV
 
     print('setting up the simulation...')
-    sim = Simulation(system)
+    write_data = ast.literal_eval(config["write_data"])
+    filename = os.path.normpath(config["filename"])
+
+    sim = Simulation(system, write_data=write_data, filename=filename)
+    print(sim.write_data, sim.f)
 
     integrate_energy = ast.literal_eval(config["integrate_energy"])
     if integrate_energy:
@@ -73,13 +79,14 @@ def main():
     if find_current:
         print('finding the current...')
         sim.T = config["temperature"]
-        v_range = config["voltage_range"] #not in eV
-        v_inc = (v_range[1] - v_range[0])/100 #not in eV
-        e_range = config["energy_range"] #not in eV
-        e_inc = (e_range[1] - e_range[0])/100 #not in eV
+
+        v_range = config["voltage_range"]  #not in eV
+        v_inc = (v_range[1] - v_range[0])/100  #not in eV
+        e_range = config["energy_range"]  #not in eV
+        e_inc = (e_range[1] - e_range[0])/50  #not in eV
         E_f = config["E_f"] * eV
-        results = sim.find_current(v_range, e_range, E_f, e_inc, v_inc)
-        sim.plot_graph(results[0], results[1], 'V', 'I')
+        results = sim.find_current(v_range, e_range, E_f, e_inc=e_inc, v_inc=v_inc)
+        #sim.plot_graph(results[0], results[1], 'V', 'I')
 
 
 if __name__ == '__main__':

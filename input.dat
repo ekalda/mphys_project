@@ -1,11 +1,11 @@
 {
-  "emitter_width" : 10,
-  "collector_width" : 10,
+  "emitter_width" : 1,
+  "collector_width" : 1,
   "barriers_and_wells" : [[0.5, 20], [0, 50], [0.5, 20]],
   "well_effective_mass" : 0.066,
-  "barrier_effective_mass" : 0.1087,
+  "barrier_effective_mass" : 0.066,
   "E_f" : 0.005,
-  "temperature" : 270,
+  "temperature" : 1.0,
   "surface_roughness" : "False",
   "deviation" : 2,
   "smooth_corners" : "False",
@@ -16,6 +16,8 @@
   "apply_voltage" : "False",
   "voltage_drop" : 0.1,
   "integrate_voltage" : "False",
-  "voltage_range" : [0, 0.3],
-  "find_current" : "True"
+  "voltage_range" : [0, 1.2],
+  "find_current" : "True",
+  "write_data" : "True",
+  "filename" : "sim_data/test_runs/IV_77K_ver3.txt"
 }
