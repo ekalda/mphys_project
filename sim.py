@@ -29,7 +29,6 @@ class Simulation(object):
             if self.write_data: self.write_to_file(e, trans_coeff)
         return e_array, t_array
 
-
     def integrate_voltage(self, v_interval, v_inc=0.01, obj_inc=1*A, const_E=0.0):
         assert isinstance(v_interval, list), 'v_interval is not a list: %r' % v_interval
         v_array = np.arange(v_interval[0], v_interval[1], v_inc)
@@ -46,7 +45,7 @@ class Simulation(object):
         return 1/(np.exp((energy-voltage-E_f)/(k*self.T)) + 1)
 
     #finding the current density through the system. For every v_inc integrate over e_interval
-    def find_current(self, v_interval, e_interval, Ef_left, Ef_right=0.005*eV, e_inc=None, v_inc=0.01, obj_inc=1*A):
+    def find_current(self, v_interval, e_interval, Ef_left, Ef_right=0.1*eV, e_inc=None, v_inc=0.01, obj_inc=1*A):
         assert e_inc is not None, "need to specify the energy increment!"
         v_array = np.arange(v_interval[0], v_interval[1], v_inc)
         i_array = []
@@ -57,10 +56,10 @@ class Simulation(object):
             # array to hold the values of discrete approximation for the integral
             integral = []
             for e in e_array:
-                t = sys_copy.find_transmission_coefficient(e*eV)
+                t = sys_copy.find_transmission_coefficient((v+e)*eV)
                 #assuming that the applied potential at the collector is zero!
                 integral.append(t * (self.boltzmann_dist(e*eV, v*eV, Ef_left) -
-                                     self.boltzmann_dist(e*eV, 0.0, Ef_right)) * np.sqrt(v*e*eV))
+                                     self.boltzmann_dist(e*eV, 0.0, Ef_right)) * np.sqrt((v+e)*eV))
             i_array.append(sum(integral))
             if self.write_data: self.write_to_file(v, sum(integral))
         return v_array, i_array

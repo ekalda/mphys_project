@@ -1,0 +1,9 @@
+#folder with sim data
+sim_data/
+
+# testing scripts
+fermi_test.py
+current_functions.py
+
+# jupyter notebook
+.ipynb_checkpoints

@@ -97,7 +97,7 @@ class System(object):
         # finding the largest inc that is smaller than the smallest increment
         for i in old_w_array:
             while i < inc:
-                print('WHILE')
+                #print('WHILE')
                 inc /= 2.
         # counting the old array divisions
         n = 0
