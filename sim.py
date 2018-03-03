@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 eV = constants.eV
 A = constants.angstrom
 k = constants.k
+m = 0.066 * constants.me
+hbar = constants.hbar
 
 class Simulation(object):
     def __init__(self, system, write_data=False, filename=None):
@@ -42,10 +44,11 @@ class Simulation(object):
         return v_array, t_array
 
     def boltzmann_dist(self, energy, voltage, E_f):
-        return 1/(np.exp((energy-voltage-E_f)/(k*self.T)) + 1)
+        #return 1/(np.exp((energy-voltage-E_f)/(k*self.T)) + 1)
+        return 1/(np.exp((E_f - energy-voltage)/(k*self.T)) + 1)
 
     #finding the current density through the system. For every v_inc integrate over e_interval
-    def find_current(self, v_interval, e_interval, Ef_left, Ef_right=0.1*eV, e_inc=None, v_inc=0.01, obj_inc=1*A):
+    def find_current(self, v_interval, e_interval, Ef_left, Ef_right=0.005*eV, e_inc=None, v_inc=0.01, obj_inc=1*A):
         assert e_inc is not None, "need to specify the energy increment!"
         v_array = np.arange(v_interval[0], v_interval[1], v_inc)
         i_array = []
@@ -58,8 +61,9 @@ class Simulation(object):
             for e in e_array:
                 t = sys_copy.find_transmission_coefficient((v+e)*eV)
                 #assuming that the applied potential at the collector is zero!
-                integral.append(t * (self.boltzmann_dist(e*eV, v*eV, Ef_left) -
-                                     self.boltzmann_dist(e*eV, 0.0, Ef_right)) * np.sqrt((v+e)*eV))
+                #integral.append(t * (self.boltzmann_dist(e*eV, v*eV, Ef_left) - self.boltzmann_dist(e*eV, 0.0, Ef_right)) * np.sqrt((v+e)*eV))
+                #integral.append(eV * m * k * self.T * t / (2*np.pi*hbar**3) * (np.log(self.boltzmann_dist(e*eV, v*eV, Ef_left)) - np.log(self.boltzmann_dist(e*eV, 0.0, Ef_right))))
+                integral.append(k * self.T * t  * (np.log(self.boltzmann_dist(e*eV, v*eV, Ef_left)) - np.log(self.boltzmann_dist(e*eV, 0.0, Ef_right))))
             i_array.append(sum(integral))
             if self.write_data: self.write_to_file(v, sum(integral))
         return v_array, i_array
@@ -75,4 +79,4 @@ class Simulation(object):
 
     def write_to_file(self, param1, param2):
         with open(self.f, 'a+') as f:
-            f.write(str(param1)+' '+str(param2)+'\n')
+            f.write(str(param1)+','+str(param2)+'\n')

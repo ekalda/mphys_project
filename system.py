@@ -6,7 +6,7 @@ from constants import Constants
 from sys_objects import *
 import constants
 import random
-import prof
+#import prof
 
 c = Constants()
 hbar = constants.hbar
