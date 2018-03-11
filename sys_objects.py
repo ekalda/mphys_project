@@ -22,6 +22,7 @@ class SysObject(object):
         elif E < V:
             return complex(0, mt.sqrt(2 * self.mass * abs(E - V)) / hbar)
 
+
     # function for finding the total propagation matrix through the object
     def find_total_obj_matrix(self, width_array, height_array, E):
         # initialising system matrix
@@ -29,17 +30,23 @@ class SysObject(object):
 
         # looping over the system object
         for i in range(len(width_array) - 1):
+            #print('SYS MATRIX', i)
             # discontinuity matrix
             k_a = self.find_wave_vector(E, height_array[i])
             k_b = self.find_wave_vector(E, height_array[i + 1])
+            #print(k_a, k_b)
             disc_mat_local = DiscontinuityMatrix(k_a, k_b, self.mass,
                                                  self.mass).disc_mat
+            #print(disc_mat_local)
             # update system matrix
             sys_mat_local = np.dot(sys_mat_local, disc_mat_local)
+            #print('sys mat', sys_mat_local)
             # propagation matrix
             prop_mat_local = PropagationMatrix(k_b, width_array[i + 1]).prop_mat
+            #print(prop_mat_local)
             # update system matrix
             sys_mat_local = np.dot(sys_mat_local, prop_mat_local)
+            #print('total sys mat', sys_mat_local)
         return sys_mat_local
 
     def smooth_obj_corners(self, mod_width=2*A, mod_height=0.05*eV, incs=5):

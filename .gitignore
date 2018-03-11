@@ -1,9 +1,11 @@
 #folder with sim data
 sim_data/
+current_functions/
 
 # testing scripts
 fermi_test.py
 current_functions.py
+test_file.py
 
 # jupyter notebook
 .ipynb_checkpoints

@@ -34,29 +34,46 @@ class System(object):
 
     def find_transmission_coefficient(self, E):
         #print('finding transmission coefficient...')
-        E += self.app_volt + 0.00000001*eV #to avoid division by 0
+        assert self.sys[0].type == 'emitter', 'the first object is not an emitter'
+        assert self.sys[-1].type == 'collector', 'the last object of the system is not a collector'
+        #E += self.app_volt + 0.00000001*eV #to avoid division by 0
         #print('energy', E)
         # initialising system matrix
         sys_mat = np.matlib.identity(2)
-        # loop over all the system elements
-        for i in range(1,len(self.sys)+1):
-            obj = self.sys[i-1]
+        # finding the last segment of the emitter to calculate the wave vector of it and hence the discontinuity matrix between the emitter and the first well
+        emitter = self.sys[0]
+        E += emitter.height_array[-1] + 0.00000001*eV
+        first_barrier = self.sys[1]
+        k_emitter_end = emitter.find_wave_vector(E, emitter.height_array[-1])
+        k_first_barrier = first_barrier.find_wave_vector(E, first_barrier.height_array[0])
+        disc_mat_emitter = DiscontinuityMatrix(k_emitter_end, k_first_barrier, emitter.mass, first_barrier.mass).disc_mat
+        # multiplying the first discontinuity matrix into the total system matrix
+        sys_mat = np.dot(sys_mat, disc_mat_emitter)
+        # need to find the first propagation matrix since find_total_object_matrix starts with the discontinuity between first two segments
+        prop_mat_emitter = PropagationMatrix(k_first_barrier, first_barrier.width_array[0]).prop_mat
+        # multiplying this one also into the total matrix
+        sys_mat = np.dot(sys_mat, prop_mat_emitter)
+        # loop over all other system elements (except the collector)
+        for i in range(1, len(self.sys)+1):
+            obj = self.sys[i]
             #print(obj.width_array, obj.height_array, E)
             obj_mat = obj.find_total_obj_matrix(obj.width_array, obj.height_array, E)
             #print(obj.width_array, obj.height_array, E)
             sys_mat = np.dot(sys_mat, obj_mat)
-
-            if i == len(self.sys):
-                break
+            #if i + 2 == len(self.sys):
+            #    break
             # enters the next object
-            obj_next = self.sys[i]
+            obj_next = self.sys[i+1]
             # finding wave vectors on the boundary of two objects
-            k_obj = obj.find_wave_vector(E, obj.height_array[len(obj.height_array)-1])
+            k_obj = obj.find_wave_vector(E, obj.height_array[-1])
             k_next = obj_next.find_wave_vector(E, obj_next.height_array[0])
             # connecting to sys objects with discontinuity matrix
+            #print(k_obj, k_next)
             boundary_disc_mat = DiscontinuityMatrix(k_obj, k_next, obj.mass, obj_next.mass).disc_mat
-
             sys_mat = np.dot(sys_mat, boundary_disc_mat)
+            #done with the transmission coefficent calculation if i+1th object is the collector
+            if i + 2 == len(self.sys):
+                break
             boundary_prop_mat = PropagationMatrix(k_next, obj_next.width_array[0]).prop_mat
             sys_mat = np.dot(sys_mat, boundary_prop_mat)
         return 1 / ((abs(sys_mat[0, 0])) ** 2)
@@ -117,7 +134,7 @@ class System(object):
         obj.width_array = new_w_arr
         obj.height_array = new_h_arr
 
-    #function that returns the potential drops
+    #function that returns the potential drops per object
     def find_pot_drops(self, sys_length):
         v = self.app_volt
         l = sys_length
@@ -127,7 +144,7 @@ class System(object):
             frac = obj.total_width/l
             #potential drop per object
             pot_drop = self.app_volt*frac
-            #append bounadaries for the object to the v_arr
+            #append boundaries for the object to the v_arr
             v_arr.append([v, v-pot_drop])
             v -= pot_drop
         assert len(v_arr)==len(self.sys), 'voltage drop array does not have a length which is same as the elements in a system'

@@ -22,6 +22,7 @@ class Simulation(object):
         e_array = np.arange(e_interval[0], e_interval[1], inc) #not in eV
         t_array = []
         for e in e_array:
+            print(e)
             sys_copy = cp.deepcopy(self.system)
             if surface_roughness:
                 assert dev is not None, 'no max dev specified'
@@ -38,14 +39,14 @@ class Simulation(object):
         for v in v_array:
             sys_copy = cp.deepcopy(self.system)
             sys_copy.apply_linear_voltage(v*eV, obj_inc)
-            trans_coeff = sys_copy.find_transmission_coefficient(const_E)
+            trans_coeff = sys_copy.find_transmission_coefficient(const_E*eV)
             t_array.append(trans_coeff)
             if self.write_data: self.write_to_file(v, trans_coeff)
         return v_array, t_array
 
     def boltzmann_dist(self, energy, voltage, E_f):
         #return 1/(np.exp((energy-voltage-E_f)/(k*self.T)) + 1)
-        return 1/(np.exp((E_f - energy-voltage)/(k*self.T)) + 1)
+        return 1/(np.exp((E_f - energy - voltage)/(k*self.T)) + 1)
 
     #finding the current density through the system. For every v_inc integrate over e_interval
     def find_current(self, v_interval, e_interval, Ef_left, Ef_right=0.005*eV, e_inc=None, v_inc=0.01, obj_inc=1*A):
@@ -56,14 +57,22 @@ class Simulation(object):
         for v in v_array:
             sys_copy = cp.deepcopy(self.system)
             sys_copy.apply_linear_voltage(v*eV, obj_inc)
+            #   print(sys_copy.sys[-1].height_array[0])
             # array to hold the values of discrete approximation for the integral
             integral = []
             for e in e_array:
-                t = sys_copy.find_transmission_coefficient((v+e)*eV)
+                t = sys_copy.find_transmission_coefficient(e*eV)
                 #assuming that the applied potential at the collector is zero!
                 #integral.append(t * (self.boltzmann_dist(e*eV, v*eV, Ef_left) - self.boltzmann_dist(e*eV, 0.0, Ef_right)) * np.sqrt((v+e)*eV))
                 #integral.append(eV * m * k * self.T * t / (2*np.pi*hbar**3) * (np.log(self.boltzmann_dist(e*eV, v*eV, Ef_left)) - np.log(self.boltzmann_dist(e*eV, 0.0, Ef_right))))
-                integral.append(k * self.T * t  * (np.log(self.boltzmann_dist(e*eV, v*eV, Ef_left)) - np.log(self.boltzmann_dist(e*eV, 0.0, Ef_right))))
+                #that's going to be messy
+                boltz_left = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[0].height_array[-1], Ef_left))
+                boltz_right = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[-1].height_array[0], Ef_right))
+                i = -k * self.T * t * (boltz_right - boltz_left) #/ (2*np.pi**2*hbar**3) * eV
+                integral.append(i)
+                #print(boltz_left, boltz_right)
+                #print(self.boltzmann_dist(e * eV, sys_copy.sys[0].height_array[-1], Ef_left))
+                #print(i_array)
             i_array.append(sum(integral))
             if self.write_data: self.write_to_file(v, sum(integral))
         return v_array, i_array
@@ -79,4 +88,4 @@ class Simulation(object):
 
     def write_to_file(self, param1, param2):
         with open(self.f, 'a+') as f:
-            f.write(str(param1)+','+str(param2)+'\n')
+            f.write(str(param1)+' '+str(param2)+'\n')
