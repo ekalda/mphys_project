@@ -30,8 +30,10 @@ def main():
     print('adding the wells and barriers...')
     for obj in objects:
         #print(type(obj[0]))
-        if obj[0] == 0: system.add_system_object(SysObject(type='well', width_array=np.array([obj[1]])*A, height_array=np.array([obj[0]])*eV, m_effective=m_w)) #it's a well!
-        else: system.add_system_object(SysObject(type='barrier', width_array=np.array([obj[1]])*A, height_array=np.array([obj[0]])*eV, m_effective=m_b)) #it's a barrier!
+        if obj[0] == 0:
+            system.add_system_object(SysObject(type='well', width_array=np.array([obj[1]])*A, height_array=np.array([obj[0]])*eV, m_effective=m_w)) #it's a well!
+        else:
+            system.add_system_object(SysObject(type='barrier', width_array=np.array([obj[1]])*A, height_array=np.array([obj[0]])*eV, m_effective=m_b)) #it's a barrier!
     #print(type(system.sys[1].width_array))
 
     print('adding the collector...')
@@ -39,7 +41,8 @@ def main():
 
     smooth_corners = ast.literal_eval(config["smooth_corners"])
     # smooth the corners if input boolean is True
-    if smooth_corners: system.smooth_corners()
+    if smooth_corners:
+        system.smooth_corners()
 
     #print(sim.system.sys[1].height_array)
     apply_constant_voltage = ast.literal_eval(config["apply_voltage"])

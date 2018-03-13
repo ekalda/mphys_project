@@ -1,6 +1,8 @@
 import numpy as np
 import cmath
+import constants
 
+transf = constants.transf
 
 class PropagationMatrix(object):
     def __init__(self, k_i, d):
@@ -13,9 +15,9 @@ class PropagationMatrix(object):
         self.prop_mat = np.complex64(np.zeros((2, 2)))
         # assigning values to the matrix elements
         self.prop_mat[0, 0] = cmath.exp(
-            complex(0, -1) * complex(self.width, 0) * self.k_i)
+            complex(0, -1) * complex(self.width, 0) * self.k_i * transf)
         self.prop_mat[1, 1] = cmath.exp(
-            complex(0, 1) * complex(self.width, 0) * self.k_i)
+            complex(0, 1) * complex(self.width, 0) * self.k_i * transf)
         return self.prop_mat
 
 
@@ -23,6 +25,7 @@ class DiscontinuityMatrix(object):
     def __init__(self, k_i, k_f, m_i_effective, m_f_effective):
         self.rho = m_i_effective / m_f_effective * k_f / k_i
         self.disc_mat = self.find_discontinuity_matrix()
+        #print(self.rho)
 
     def find_discontinuity_matrix(self):
         # creating numpy matrix

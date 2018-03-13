@@ -19,5 +19,5 @@
   "voltage_range" : [0, 3.0],
   "find_current" : "True",
   "write_data" : "True",
-  "filename" : "sim_data/current/sim14.txt"
+  "filename" : "sim_data/current/sim20.txt"
 }

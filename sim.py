@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 eV = constants.eV
 A = constants.angstrom
 k = constants.k
-m = 0.066 * constants.me
+#m = 0.066 * constants.me
 hbar = constants.hbar
+i_const = constants.i_const
 
 class Simulation(object):
     def __init__(self, system, write_data=False, filename=None):
@@ -22,12 +23,14 @@ class Simulation(object):
         e_array = np.arange(e_interval[0], e_interval[1], inc) #not in eV
         t_array = []
         for e in e_array:
-            print(e)
+            #print(e)
+            #print(e*eV)
             sys_copy = cp.deepcopy(self.system)
             if surface_roughness:
                 assert dev is not None, 'no max dev specified'
                 sys_copy.adjust_widths(dev)
             trans_coeff = sys_copy.find_transmission_coefficient(e*eV)
+            print(trans_coeff)
             t_array.append(trans_coeff)
             if self.write_data: self.write_to_file(e, trans_coeff)
         return e_array, t_array
@@ -68,7 +71,7 @@ class Simulation(object):
                 #that's going to be messy
                 boltz_left = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[0].height_array[-1], Ef_left))
                 boltz_right = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[-1].height_array[0], Ef_right))
-                i = -k * self.T * t * (boltz_right - boltz_left) #/ (2*np.pi**2*hbar**3) * eV
+                i = -i_const * self.system.sys[0].mass * self.T * t * (boltz_right - boltz_left) #/ (2*np.pi**2*hbar**3) * eV
                 integral.append(i)
                 #print(boltz_left, boltz_right)
                 #print(self.boltzmann_dist(e * eV, sys_copy.sys[0].height_array[-1], Ef_left))

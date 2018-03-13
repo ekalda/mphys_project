@@ -14,13 +14,17 @@ class SysObject(object):
         self.height_array = height_array
         self.mass = m_effective
         self.type = type
+        print('mass', self.mass)
 
     def find_wave_vector(self, E, V):
         assert E != V, 'E and V must not equal to each other'
+        #print(E, V)
         if E > V:
-            return complex(mt.sqrt(2 * self.mass * abs(E - V)) / hbar, 0)
+            #return complex(mt.sqrt(2 * self.mass * abs(E - V)) / hbar, 0)
+            return complex(mt.sqrt(self.mass * abs(E - V)), 0)
         elif E < V:
-            return complex(0, mt.sqrt(2 * self.mass * abs(E - V)) / hbar)
+            #return complex(0, mt.sqrt(2 * self.mass * abs(E - V)) / hbar)
+            return complex(0, mt.sqrt(self.mass * abs(E - V)))
 
 
     # function for finding the total propagation matrix through the object
