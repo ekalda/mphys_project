@@ -2,13 +2,11 @@ from mat import *
 import numpy as np
 from numpy import matlib
 import math as mt
-from constants import Constants
 from sys_objects import *
 import constants
 import random
 #import prof
 
-c = Constants()
 hbar = constants.hbar
 A = constants.angstrom
 eV = constants.eV
@@ -42,9 +40,10 @@ class System(object):
         sys_mat = np.matlib.identity(2)
         # finding the last segment of the emitter to calculate the wave vector of it and hence the discontinuity matrix between the emitter and the first well
         emitter = self.sys[0]
-        E += emitter.height_array[-1] + 0.00000001*eV
+        E += emitter.height_array[-1] + 0.00000001*eV + self.app_volt
         first_barrier = self.sys[1]
         k_emitter_end = emitter.find_wave_vector(E, emitter.height_array[-1])
+        #print(E, first_barrier.height_array[0])
         k_first_barrier = first_barrier.find_wave_vector(E, first_barrier.height_array[0])
         disc_mat_emitter = DiscontinuityMatrix(k_emitter_end, k_first_barrier, emitter.mass, first_barrier.mass).disc_mat
         # multiplying the first discontinuity matrix into the total system matrix
@@ -115,6 +114,7 @@ class System(object):
         for i in old_w_array:
             while i < inc:
                 #print('WHILE')
+                #print(i, inc)
                 inc /= 2.
         # counting the old array divisions
         n = 0
@@ -161,7 +161,7 @@ class System(object):
             obj.width_array[-1] += dev
             obj_next.width_array[0] -= dev
         adj_sys_l = self.find_sys_length()
-        assert abs(init_sys_l-adj_sys_l) < 0.000001, 'adjusting object widths changed the system length'
+        #assert abs(init_sys_l-adj_sys_l) < 0.000001, 'adjusting object widths changed the system length'
 
     def smooth_corners(self, objects=None):
         # check if there is a list of object for which to do the smoothing and if not, do it for all the objects

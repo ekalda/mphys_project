@@ -19,6 +19,9 @@ def main():
     m_b = config["barrier_effective_mass"]*me
     m_w = config["well_effective_mass"]*me
     objects = config["barriers_and_wells"]
+    shield_barrier = None
+    if config['shield barrier'] != 'None':
+        shield_barrier = config['shield barrier']
 
     print('creating the system object...')
     system = System()
@@ -27,14 +30,20 @@ def main():
     system.add_system_object(SysObject(type='emitter', width_array=np.array([config["emitter_width"]])*A, height_array=np.array([0]), m_effective=m_w))
     #print(system.sys[0].width_array)
 
+    if shield_barrier:
+        print('adding the first shielding barrier...')
+        system.add_system_object(SysObject(type='shield barrier', width_array=np.array([shield_barrier[1]])*A, height_array=np.array([shield_barrier[0]])*eV, m_effective=m_b))
+
     print('adding the wells and barriers...')
     for obj in objects:
-        #print(type(obj[0]))
         if obj[0] == 0:
             system.add_system_object(SysObject(type='well', width_array=np.array([obj[1]])*A, height_array=np.array([obj[0]])*eV, m_effective=m_w)) #it's a well!
         else:
             system.add_system_object(SysObject(type='barrier', width_array=np.array([obj[1]])*A, height_array=np.array([obj[0]])*eV, m_effective=m_b)) #it's a barrier!
-    #print(type(system.sys[1].width_array))
+
+    if shield_barrier:
+        print('adding the second shielding barrier...')
+        system.add_system_object(SysObject(type='shield barrier', width_array=np.array([shield_barrier[1]])*A, height_array=np.array([shield_barrier[0]])*eV, m_effective=m_b))
 
     print('adding the collector...')
     system.add_system_object(SysObject(type='collector', width_array=np.array([config["collector_width"]])*A, height_array=np.array([0]), m_effective=m_w))
@@ -44,19 +53,19 @@ def main():
     if smooth_corners:
         system.smooth_corners()
 
-    #print(sim.system.sys[1].height_array)
     apply_constant_voltage = ast.literal_eval(config["apply_voltage"])
     if apply_constant_voltage:
         voltage = config["voltage_drop"]
         print('applying constant voltage of %s to the system...' %voltage)
-        system.app_volt = voltage * eV
+        system.apply_linear_voltage(voltage * eV, 1*A)
+        print(system.app_volt)
 
     print('setting up the simulation...')
     write_data = ast.literal_eval(config["write_data"])
     filename = os.path.normpath(config["filename"])
 
     sim = Simulation(system, write_data=write_data, filename=filename)
-    print(sim.write_data, sim.f)
+    print(sim.system.app_volt)
 
     integrate_energy = ast.literal_eval(config["integrate_energy"])
     if integrate_energy:
@@ -66,7 +75,7 @@ def main():
         inc = (e_range[1] - e_range[0])/100
         surface_rough = ast.literal_eval(config["surface_roughness"])
         dev = config["deviation"] * A
-        results = sim.integrate_energy(e_range, inc, surface_roughness = surface_rough, dev=dev)
+        results = sim.integrate_energy(e_range, inc, surface_roughness=surface_rough, dev=dev)
         sim.plot_graph(results[0], results[1], 'E', 'T')
 
     integrate_voltage = ast.literal_eval(config["integrate_voltage"])
@@ -84,12 +93,12 @@ def main():
         sim.T = config["temperature"]
 
         v_range = config["voltage_range"]  #not in eV
-        v_inc = (v_range[1] - v_range[0])/100  #not in eV
+        v_inc = (v_range[1] - v_range[0])/200  #not in eV
         e_range = config["energy_range"]  #not in eV
-        e_inc = (e_range[1] - e_range[0])/50  #not in eV
+        e_inc = (e_range[1] - e_range[0])/150  #not in eV
         E_f = config["E_f"] * eV
         results = sim.find_current(v_range, e_range, E_f, e_inc=e_inc, v_inc=v_inc)
-        #sim.plot_graph(results[0], results[1], 'V', 'I')
+        sim.plot_graph(results[0], results[1], 'V', 'I')
 
 
 if __name__ == '__main__':

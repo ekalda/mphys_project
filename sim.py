@@ -14,7 +14,7 @@ i_const = constants.i_const
 class Simulation(object):
     def __init__(self, system, write_data=False, filename=None):
         self.system = system
-        self.T = 1 #K
+        self.T = 300 #K
         self.write_data = write_data
         self.f = filename
 
@@ -30,7 +30,7 @@ class Simulation(object):
                 assert dev is not None, 'no max dev specified'
                 sys_copy.adjust_widths(dev)
             trans_coeff = sys_copy.find_transmission_coefficient(e*eV)
-            print(trans_coeff)
+            #print(trans_coeff)
             t_array.append(trans_coeff)
             if self.write_data: self.write_to_file(e, trans_coeff)
         return e_array, t_array
@@ -52,26 +52,39 @@ class Simulation(object):
         return 1/(np.exp((E_f - energy - voltage)/(k*self.T)) + 1)
 
     #finding the current density through the system. For every v_inc integrate over e_interval
-    def find_current(self, v_interval, e_interval, Ef_left, Ef_right=0.005*eV, e_inc=None, v_inc=0.01, obj_inc=1*A):
+    def find_current(self, v_interval, e_interval, Ef_left, Ef_right=0.01*eV, e_inc=None, v_inc=0.01, obj_inc=0.5*A, sr=False, dev=2*A):
         assert e_inc is not None, "need to specify the energy increment!"
         v_array = np.arange(v_interval[0], v_interval[1], v_inc)
         i_array = []
         e_array = np.arange(e_interval[0], e_interval[1], e_inc)
         for v in v_array:
-            sys_copy = cp.deepcopy(self.system)
-            sys_copy.apply_linear_voltage(v*eV, obj_inc)
+            #sys_copy = cp.deepcopy(self.system)
+            #sys_copy.apply_linear_voltage(v * eV, obj_inc)
+            #print(sys_copy.app_volt)
             #   print(sys_copy.sys[-1].height_array[0])
             # array to hold the values of discrete approximation for the integral
             integral = []
             for e in e_array:
+                sys_copy = cp.deepcopy(self.system)
+                #print('before', sys_copy.sys[1].width_array)
+                if sr:
+                    #print('sr')
+                    assert dev is not None, 'no max dev specified'
+                    sys_copy.adjust_widths(dev)
+                #print('after', sys_copy.sys[1].width_array)
+                sys_copy.apply_linear_voltage(v * eV, obj_inc)
+                #print(sys_copy.app_volt)
                 t = sys_copy.find_transmission_coefficient(e*eV)
                 #assuming that the applied potential at the collector is zero!
-                #integral.append(t * (self.boltzmann_dist(e*eV, v*eV, Ef_left) - self.boltzmann_dist(e*eV, 0.0, Ef_right)) * np.sqrt((v+e)*eV))
                 #integral.append(eV * m * k * self.T * t / (2*np.pi*hbar**3) * (np.log(self.boltzmann_dist(e*eV, v*eV, Ef_left)) - np.log(self.boltzmann_dist(e*eV, 0.0, Ef_right))))
                 #that's going to be messy
-                boltz_left = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[0].height_array[-1], Ef_left))
-                boltz_right = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[-1].height_array[0], Ef_right))
-                i = -i_const * self.system.sys[0].mass * self.T * t * (boltz_right - boltz_left) #/ (2*np.pi**2*hbar**3) * eV
+                #boltz_left = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[0].height_array[-1], Ef_left))
+                #boltz_right = np.log(self.boltzmann_dist(e*eV, sys_copy.sys[-1].height_array[0], Ef_right))
+                boltz_left = self.boltzmann_dist(e*eV, sys_copy.sys[0].height_array[-1], Ef_left)
+                boltz_right = self.boltzmann_dist(e*eV, sys_copy.sys[-1].height_array[0], Ef_right)
+                boltz_diff = np.log(boltz_left/boltz_right)
+                #print(e, boltz_diff)
+                i = 1 * self.system.sys[0].mass * self.T * t * boltz_diff #/ (2*np.pi**2*hbar**3) * eV
                 integral.append(i)
                 #print(boltz_left, boltz_right)
                 #print(self.boltzmann_dist(e * eV, sys_copy.sys[0].height_array[-1], Ef_left))
@@ -83,7 +96,7 @@ class Simulation(object):
     #function for plotting the graph
     def plot_graph(self, param1, param2, x_label=None, y_label=None, label=None):
         plt.plot(param1, param2, label=label)
-        #plt.yscale('log')
+        plt.yscale('log')
         plt.xlabel(x_label)
         plt.ylabel(y_label)
         plt.legend()
@@ -91,4 +104,4 @@ class Simulation(object):
 
     def write_to_file(self, param1, param2):
         with open(self.f, 'a+') as f:
-            f.write(str(param1)+' '+str(param2)+'\n')
+            f.write(str(param1)+','+str(param2)+'\n')
